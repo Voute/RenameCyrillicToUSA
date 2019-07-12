@@ -1,18 +1,25 @@
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Main {
 
-    ArrayList
-
     public static void main(String[] args) {
-        Arra
-        System.out.println("Hello World!");
+
+        final ArrayList<FileRenamed> renamedFiles = new ArrayList<>();
+        final ArrayList<String> fileIncludePatterns = new ArrayList<>();
+
         String executionPathString = Paths.get("").toAbsolutePath().toString();
         Path executionPath = Paths.get("").toAbsolutePath();
         System.out.println(executionPathString);
+
+        fileIncludePatterns.addAll(Arrays.asList(args));
 
         try {
             Files.walkFileTree(executionPath, new FileVisitor<Path>() {
@@ -24,9 +31,10 @@ public class Main {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     String fileName = file.getFileName().toString();
-                    if (!fileName.contains(".java")) {
-
-                        System.out.println(fileName + " will be renamed to ");
+                    if (checkFileByPatterns(fileName, fileIncludePatterns)) {
+                        FileRenamed fileRenamed = new FileRenamed(fileName);
+                        renamedFiles.add(fileRenamed);
+                        System.out.println(fileRenamed.getName() + " will be renamed to " + fileRenamed.newFile.getName());
                     }
                     return FileVisitResult.CONTINUE;
                 }
@@ -44,43 +52,41 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        if (renamedFiles.size() > 0) {
+
+            try {
+                if (getUserInput("Press 'y' to rename files or 'exit' to exit:").matches("y"))
+
+                    for (FileRenamed fileRenamed : renamedFiles) {
+
+                        fileRenamed.renameTo(fileRenamed.newFile);
+                    }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Nothing to rename");
+        }
+
+        System.out.println("done");
     }
 
-    class FileRenamer {
-        HashMap<String, String> charMap = new HashMap() {{
-            put("а","a"),
-                    put("б","b"),
-                    put("в","v"),
-                    put("г","g"),
-                    put("д","d"),
-                    put("е","ye"),
-                    put("ж","zsh"),
-                    put("з","z"),
-                    put("и","i"),
-                    put("к","k"),
-                    put("л","l"),
-                    put("м","m"),
-                    put("н","n"),
-                    put("о","o"),
-                    put("п","p"),
-                    put("р","r"),
-                    put("с","s"),
-                    put("т","t"),
-                    put("у","u"),
-                    put("ф","f"),
-                    put("х","h"),
-                    put("ш","sh"),
-                    put("щ","sh"),
-                    put("э","e"),
-                    put("ю","yu"),
-                    put("ь","'"),
-                    put("ъ",""),
-                    put("я","ya")
-        }};
+    static boolean checkFileByPatterns(String fileName, ArrayList<String> patterns) {
+        for (String pattern : patterns) {
+            if (fileName.contains(pattern)) return true;
+        }
+        return false;
+    }
 
-        String fileToRename;
-        String newFileName;
-
-
+    static String getUserInput(String message) throws IOException {
+        String input = null;
+        while (input == null || input.matches("")) {
+            System.out.println(message);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            input = reader.readLine();
+        }
+        return input;
     }
 }
